@@ -1,0 +1,5 @@
+{
+  "name": "Chatbot Logic Explorer: Rules vs. LLM",
+  "description": "A simple web application that contrasts a rule-based chatbot (like ELIZA) with an advanced LLM-powered chatbot (Gemini). Users can interact with both and see the underlying logic or context used to generate each response.",
+  "requestFramePermissions": []
+}
