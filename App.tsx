@@ -2,6 +2,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { Message } from './types';
 import RuleBasedBot from './components/RuleBasedBot';
+import ApiKeySettings from './components/ApiKeySettings';
 import GeminiBot from './components/GeminiBot';
 import { SendIcon, SunIcon, MoonIcon } from './components/icons';
 
@@ -97,6 +98,7 @@ const App: React.FC = () => {
                 </p>
             </header>
             
+            <ApiKeySettings onChange={handleClear} />
             <main className="flex-1 container mx-auto px-4 md:px-8 pb-4 overflow-hidden">
                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                     <RuleBasedBot

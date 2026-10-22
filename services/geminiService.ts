@@ -1,22 +1,17 @@
 
-import { GoogleGenAI, Chat } from "@google/genai";
+import { Chat } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-    console.error("API_KEY is not set. Please set the API_KEY environment variable.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+import { providerSession, invalidateRequests, safeProviderError } from './visitorKey.ts';
 
 const initialBotMessage = "Hello! I'm a chatbot. Please tell me your name to get started.";
 
-let chat: Chat;
+let chat: Chat | undefined;
 
-const initializeChat = () => {
-    chat = ai.chats.create({
+const initializeChat = (session: ReturnType<typeof providerSession>) => {
+    chat = session.ai.chats.create({
       model: 'gemini-2.5-flash',
       config: {
+        abortSignal: session.signal,
         systemInstruction: 'You are a friendly and empathetic chatbot. Keep your responses concise and conversational.',
       },
       history: [
@@ -28,21 +23,21 @@ const initializeChat = () => {
     });
 };
 
-initializeChat(); // Set up the initial chat
-
 export const getGeminiResponse = async (prompt: string): Promise<string> => {
-    if (!API_KEY) {
-        return "Gemini API key is not configured. Please check the environment variables.";
-    }
+  const session = providerSession();
   try {
-    const response = await chat.sendMessage({ message: prompt });
-    return response.text;
+    if (!chat) initializeChat(session);
+    session.assertCurrent();
+    const response = await chat!.sendMessage({ message: prompt });
+    session.assertCurrent();
+    if (!response.text) throw new Error('Empty response');
+    return session.cleanText(response.text);
   } catch (error) {
-    console.error("Error fetching Gemini response:", error);
-    return "Sorry, I encountered an error while trying to respond.";
+    throw safeProviderError(error);
   }
 };
 
 export const resetGeminiChat = () => {
-    initializeChat();
+  invalidateRequests();
+  chat = undefined;
 };

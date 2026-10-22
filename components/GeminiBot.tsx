@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Message, ChatBotProps } from '../types';
 import ChatWindow from './ChatWindow';
+import { safeProviderError } from '../services/visitorKey';
 import { getGeminiResponse, resetGeminiChat } from '../services/geminiService';
 
 const initialMessageText = "Hello! I'm a chatbot. Please tell me your name to get started.";
@@ -24,6 +25,7 @@ const GeminiBot: React.FC<ChatBotProps> = ({ lastUserMessage, onBotReplied, rese
     // Effect to process a new user message
     useEffect(() => {
         if (!lastUserMessage) return;
+        let active = true;
 
         // Add user message to state immediately
         const historyBeforeThisTurn = messages;
@@ -39,6 +41,7 @@ const GeminiBot: React.FC<ChatBotProps> = ({ lastUserMessage, onBotReplied, rese
 
             try {
                 const geminiText = await getGeminiResponse(lastUserMessage.text);
+                if (!active) return;
                 const botMessage: Message = {
                     id: Date.now().toString() + '-gm-bot',
                     text: geminiText,
@@ -48,22 +51,23 @@ const GeminiBot: React.FC<ChatBotProps> = ({ lastUserMessage, onBotReplied, rese
                 };
                 setMessages(prev => [...prev, botMessage]);
             } catch (error) {
-                console.error("Gemini API Error:", error);
+                if (!active) return;
                 const errorBotMessage: Message = {
                     id: Date.now().toString() + '-gm-bot-error',
-                    text: "Sorry, I ran into an issue connecting to the Gemini API.",
+                    text: safeProviderError(error).message,
                     sender: 'bot',
                     explanationTitle: "API Error",
-                    explanation: "There was an error fetching the response from the Gemini API. Please check the console for details and ensure the API key is configured correctly."
+                    explanation: "Use the key settings above to enter or change your Gemini API key. The rules-based bot remains available without a key."
                 };
                 setMessages(prev => [...prev, errorBotMessage]);
             } finally {
-                setIsLoading(false);
-                onBotReplied(); // Notify parent component that the response is complete
+                if (active) { setIsLoading(false);
+                onBotReplied(); } // Notify parent component that the response is complete
             }
         };
 
         fetchResponse();
+        return () => { active = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lastUserMessage]);
 

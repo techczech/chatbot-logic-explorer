@@ -4,13 +4,13 @@ A comparative web application that visualizes the difference between traditional
 
 ## 🏗 Architecture
 
-This application is built as a **Single Page Application (SPA)** using React 19. It utilizes a **"No-Build" architecture**, leveraging native ES Modules and Import Maps to load dependencies directly from a CDN (`esm.sh`) without requiring a complex bundler step (like Webpack or Vite) for development.
+This application is built as a **Single Page Application (SPA)** using React 19. Vite bundles React, the Gemini SDK and Tailwind CSS locally into a static production build. It needs no Google Cloud hosting or AI Studio proxy.
 
 ### Core Technology Stack
 *   **Frontend Framework:** React 19
-*   **Styling:** Tailwind CSS (loaded via CDN)
+*   **Styling:** Tailwind CSS (bundled locally)
 *   **AI SDK:** Google GenAI SDK (`@google/genai`)
-*   **Language:** TypeScript (Transpiled on-the-fly or pre-transpiled depending on the environment)
+*   **Language:** TypeScript (compiled by Vite)
 
 ### The "Dual-Bot" Pattern
 
@@ -28,7 +28,7 @@ The application follows a dispatcher pattern managed by `App.tsx`.
 
 ```text
 /
-├── index.html              # Entry point. Defines Import Maps for React & GenAI SDK.
+├── index.html              # Vite entry point.
 ├── index.tsx               # Application root mount.
 ├── App.tsx                 # Main layout and state orchestrator.
 ├── metadata.json           # Application metadata and permissions.
@@ -45,22 +45,15 @@ The application follows a dispatcher pattern managed by `App.tsx`.
 
 ## 🚀 Deployment
 
-### Environment Variables
-This application requires a valid Google Gemini API Key to function. The application expects the key to be available via:
+### Run and build
 
-```typescript
-process.env.API_KEY
-```
+Use Node 22.18 or newer and npm. Run `npm ci`, `npm run dev`, `npm run typecheck`, `npm test`, and `npm run build`. The production output is `dist/` and can be served by any static host, including Cloudflare Pages (build: `npm run build`, output: `dist`). No deployment is performed by this repository.
 
-**Security Note:** In a client-side only application, API keys are typically visible in the network tab. For production environments, it is recommended to proxy these requests through a backend server. However, for this educational demo/explorer, the key is injected directly into the client execution context.
+### Visitor key
 
-### Hosting
+The rules-based bot works without a key. To use Gemini, enter your own Gemini API key in the app and choose **Use key**. The key stays in memory for this tab; it is never saved to browser storage, exported or injected by the build. **Clear key** or a reload removes it. Changing or clearing the key also resets the conversation and cancels pending results. A request already sent to Google cannot be recalled.
 
-Because this project uses native ES modules and CDN imports, it can be hosted on any static hosting provider (Vercel, Netlify, Cloudflare Pages, Firebase Hosting) or a simple HTTP server.
-
-**Requirements:**
-1.  **HTTPS:** Required for secure browser features.
-2.  **API Key Configuration:** The hosting environment must support injecting the `API_KEY` environment variable into the build or runtime context.
+Requests go directly to the Gemini Developer API using the visitor's quota. Missing keys, rejected requests and quota errors appear in the conversation without raw provider details. Do not configure owner API keys as build variables.
 
 ## 🧠 Logic Breakdown
 

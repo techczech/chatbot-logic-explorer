@@ -24,7 +24,7 @@ const RuleBasedBot: React.FC<ChatBotProps> = ({ lastUserMessage, onBotReplied, r
         setMessages(prev => [...prev, lastUserMessage]);
 
         // Use a timeout to simulate the bot "thinking"
-        setTimeout(() => {
+        const timer = setTimeout(() => {
             let botResponse: Message;
             const text = lastUserMessage.text;
             const lowerCaseText = text.toLowerCase();
@@ -126,6 +126,7 @@ if (userName && foundNegativeWord) {
             setMessages(prev => [...prev, botResponse]);
             onBotReplied(); // Notify parent component that the response is complete
         }, 500);
+        return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lastUserMessage]);
 
